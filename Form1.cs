@@ -224,7 +224,7 @@ namespace XCannon
 								// ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890 -+*/= ,.:\"|'!? []() 
 								static readonly IReadOnlyDictionary<char, LetterData> CharData = new Dictionary<char, LetterData>()
 								{
-												{'A', new LetterData('A') { CharGraphics = new int[,] { { 2, 1, 2 }, { 2, 0, 2 }, { 1, 1, 1 }, { 1, 0, 1 } } } },
+												{'A', new LetterData('A') { CharGraphics = new int[,] { { 2, 1, 2 }, { 1, 0, 1 }, { 1, 1, 1 }, { 1, 0, 1 } } } },
 												{'B', new LetterData('B') { CharGraphics = new int[,] { { 1, 1, 0 }, { 1, 1, 2 }, { 1, 0, 1 }, { 1, 1, 1 } } } },
 												{'C', new LetterData('C') { CharGraphics = new int[,] { { 0, 1, 1 }, { 1, 0, 0 }, { 1, 0, 0 }, { 0, 1, 1 } } } },
 												{'D', new LetterData('D') { CharGraphics = new int[,] { { 1, 1, 0 }, { 1, 0, 1 }, { 1, 0, 1 }, { 1, 1, 0 } } } },
@@ -237,8 +237,8 @@ namespace XCannon
 												{'K', new LetterData('K') { CharGraphics = new int[,] { { 1, 0, 1 }, { 1, 1, 0 }, { 1, 0, 1 }, { 1, 0, 1 } } } },
 												{'L', new LetterData('L') { CharGraphics = new int[,] { { 1, 0, 0 }, { 1, 0, 0 }, { 1, 0, 0 }, { 1, 1, 1 } } } },
 												{'M', new LetterData('M') { CharGraphics = new int[,] { { 1, 2, 1 }, { 1, 1, 1 }, { 1, 0, 1 }, { 1, 0, 1 } } } },
-												{'N', new LetterData('N') { CharGraphics = new int[,] { { 1, 0, 1 }, { 1, 2, 1 }, { 1, 1, 1 }, { 1, 0, 1 } } } },
-												{'O', new LetterData('O') { CharGraphics = new int[,] { { 2, 1, 0 }, { 1, 0, 1 }, { 1, 0, 1 }, { 0, 1, 2 } } } },
+												{'N', new LetterData('N') { CharGraphics = new int[,] { { 1, 1, 2 }, { 1, 0, 1 }, { 1, 0, 1 }, { 1, 0, 1 } } } },
+												{'O', new LetterData('O') { CharGraphics = new int[,] { { 0, 1, 0 }, { 1, 0, 1 }, { 1, 0, 1 }, { 0, 1, 0 } } } },
 												{'P', new LetterData('P') { CharGraphics = new int[,] { { 1, 1, 0 }, { 1, 0, 1 }, { 1, 1, 0 }, { 1, 0, 0 } } } },
 												{'Q', new LetterData('Q') { CharGraphics = new int[,] { { 0, 1, 0 }, { 1, 0, 1 }, { 1, 2, 1 }, { 0, 1, 1 } } } },
 												{'R', new LetterData('R') { CharGraphics = new int[,] { { 1, 1, 2 }, { 1, 0, 1 }, { 1, 1, 0 }, { 1, 0, 1 } } } },
