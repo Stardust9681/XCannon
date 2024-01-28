@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -37,6 +38,15 @@ namespace XCannon
 																				return;
 																//textInput.Text = $"{{{value[1]}, {value[2]}, {value[3]}}}";
 																RootColour = Color.FromArgb(value[0], value[1], value[2], value[3]);
+												}
+								}
+								public PixelFormat Format
+								{
+												get
+												{
+																if (ImageText.Length < 255)
+																				return PixelFormat.Format24bppRgb;
+																return PixelFormat.Format16bppRgb555;
 												}
 								}
 
@@ -89,7 +99,7 @@ namespace XCannon
 																				return (byte)(((secondFloat - firstFloat) * by) + firstFloat);
 																}
 																Color root = RootColour;
-																if (RootColour.GetBrightness() < .55f)
+																if (root.GetBrightness() < .48f)
 																				return Color.FromArgb(Lerp(root.R, 255, 0.75f), Lerp(root.G, 255, 0.75f), Lerp(root.B, 255, 0.75f));
 																return Color.FromArgb(Lerp(root.R, 0, 0.55f), Lerp(root.G, 0, 0.55f), Lerp(root.B, 0, 0.55f));
 												}
@@ -140,6 +150,25 @@ namespace XCannon
 
 								public static string ImageText { get; private set; } = "KO";
 
+								public bool TryReload(int numTrials = 3)
+								{
+												Exception e = default(Exception);
+												for (int i = 0; i < numTrials; i++)
+												{
+																try
+																{
+																				ReloadImage();
+																}
+																catch (Exception x)
+																{
+																				e = x;
+																				continue;
+																}
+																return true;
+												}
+												Logging.Log(e);
+												return false;
+								}
 								public void ReloadImage()
 								{
 												if (textInput.Text.Any(x =>
@@ -153,10 +182,22 @@ namespace XCannon
 																}), '?');
 												if (CannonImage != null)
 																CannonImage.Dispose();
+
+												int scalingFactor = ImageText.Length < 255 ? 2 : 1;
+
 												CannonImage = new Bitmap(17 + (ImageText.Length * 4), 16);
-												if (CannonImage.Width > 155)
+												if (CannonImage.Width * scalingFactor > 310)
 												{
-																Size = new Size(188 + (CannonImage.Width * 2), Size.Height);
+																int w = 188 + (CannonImage.Width * scalingFactor);
+																int screenWidth = Screen.PrimaryScreen.Bounds.Width;
+																if (Bounds.Left + w > screenWidth)
+																{
+																				scalingFactor = 1;
+																				w = 188 + CannonImage.Width;
+																				if (w > screenWidth)
+																								w = screenWidth;
+																}
+																Size = new Size(w, Size.Height);
 																tableLayoutPanel1.AutoScroll = true;
 																//tableLayoutPanel1.Width = Size.Width;
 												}
@@ -182,8 +223,6 @@ namespace XCannon
 												CannonImage.SetPixel(11 + (ImageText.Length * 4), 10, Outline3);
 												FillRect(new Point(11, 2), new Point(11 + (ImageText.Length * 4), 2), Outline2);
 
-												const int scalingFactor = 2;
-
 												//Size newSize = new Size(CannonImage.Width * scalingFactor, CannonImage.Height * scalingFactor);
 												//pictureBox1.Image = new Bitmap(CannonImage, newSize);
 
@@ -191,7 +230,7 @@ namespace XCannon
 												Bitmap Scale(Image current, int scaleFactor)
 												{
 																Graphics graphics = null;
-																Bitmap newImg = new Bitmap(current.Width * scaleFactor, current.Height * scaleFactor);
+																Bitmap newImg = new Bitmap(current.Width * scaleFactor, current.Height * scaleFactor, Format);
 																try
 																{
 																				graphics = Graphics.FromImage(newImg);
@@ -221,7 +260,7 @@ namespace XCannon
 								}
 
 								//Test case:
-								// ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890 -+*/= ,.:\"|'!? []() 
+								// ABCDEFGHIJKLMNOPQRSTUVWXYZ 1234567890 -+*/= ,.:\"|'_!? []()<> 
 								static readonly IReadOnlyDictionary<char, LetterData> CharData = new Dictionary<char, LetterData>()
 								{
 												{'A', new LetterData('A') { CharGraphics = new int[,] { { 2, 1, 2 }, { 1, 0, 1 }, { 1, 1, 1 }, { 1, 0, 1 } } } },
@@ -233,14 +272,14 @@ namespace XCannon
 												{'G', new LetterData('G') { CharGraphics = new int[,] { { 0, 1, 1 }, { 1, 0, 0 }, { 1, 0, 1 }, { 0, 1, 1 } } } },
 												{'H', new LetterData('H') { CharGraphics = new int[,] { { 1, 0, 1 }, { 1, 1, 1 }, { 1, 0, 1 }, { 1, 0, 1 } } } },
 												{'I', new LetterData('I') { CharGraphics = new int[,] { { 1, 1, 1 }, { 0, 1, 0 }, { 0, 1, 0 }, { 1, 1, 1 } } } },
-												{'J', new LetterData('J') { CharGraphics = new int[,] { { 1, 1, 1 }, { 0, 0, 1 }, { 0, 0, 1 }, { 1, 1, 0 } } } },
+												{'J', new LetterData('J') { CharGraphics = new int[,] { { 1, 1, 1 }, { 0, 0, 1 }, { 0, 0, 1 }, { 1, 1, 2 } } } },
 												{'K', new LetterData('K') { CharGraphics = new int[,] { { 1, 0, 1 }, { 1, 1, 0 }, { 1, 0, 1 }, { 1, 0, 1 } } } },
 												{'L', new LetterData('L') { CharGraphics = new int[,] { { 1, 0, 0 }, { 1, 0, 0 }, { 1, 0, 0 }, { 1, 1, 1 } } } },
 												{'M', new LetterData('M') { CharGraphics = new int[,] { { 1, 2, 1 }, { 1, 1, 1 }, { 1, 0, 1 }, { 1, 0, 1 } } } },
 												{'N', new LetterData('N') { CharGraphics = new int[,] { { 1, 1, 2 }, { 1, 0, 1 }, { 1, 0, 1 }, { 1, 0, 1 } } } },
 												{'O', new LetterData('O') { CharGraphics = new int[,] { { 0, 1, 0 }, { 1, 0, 1 }, { 1, 0, 1 }, { 0, 1, 0 } } } },
 												{'P', new LetterData('P') { CharGraphics = new int[,] { { 1, 1, 0 }, { 1, 0, 1 }, { 1, 1, 0 }, { 1, 0, 0 } } } },
-												{'Q', new LetterData('Q') { CharGraphics = new int[,] { { 0, 1, 0 }, { 1, 0, 1 }, { 1, 2, 1 }, { 0, 1, 1 } } } },
+												{'Q', new LetterData('Q') { CharGraphics = new int[,] { { 0, 1, 0 }, { 1, 0, 1 }, { 1, 1, 2 }, { 0, 1, 1 } } } },
 												{'R', new LetterData('R') { CharGraphics = new int[,] { { 1, 1, 2 }, { 1, 0, 1 }, { 1, 1, 0 }, { 1, 0, 1 } } } },
 												{'S', new LetterData('S') { CharGraphics = new int[,] { { 0, 1, 1 }, { 1, 2, 0 }, { 0, 2, 1 }, { 1, 1, 0 } } } },
 												{'T', new LetterData('T') { CharGraphics = new int[,] { { 1, 1, 1 }, { 0, 1, 0 }, { 0, 1, 0 }, { 0, 1, 0 } } } },
@@ -251,7 +290,7 @@ namespace XCannon
 												{'Y', new LetterData('Y') { CharGraphics = new int[,] { { 1, 0, 1 }, { 2, 1, 2 }, { 0, 1, 0 }, { 0, 1, 0 } } } },
 												{'Z', new LetterData('Z') { CharGraphics = new int[,] { { 1, 1, 1 }, { 0, 2, 1 }, { 1, 2, 0 }, { 1, 1, 1 } } } },
 												{'1', new LetterData('1') { CharGraphics = new int[,] { { 1, 1, 0 }, { 0, 1, 0 }, { 0, 1, 0 }, { 1, 1, 1 } } } },
-												{'2', new LetterData('2') { CharGraphics = new int[,] { { 1, 1, 0 }, { 0, 0, 1 }, { 0, 1, 0 }, { 1, 1, 1 } } } },
+												{'2', new LetterData('2') { CharGraphics = new int[,] { { 2, 1, 0 }, { 0, 0, 1 }, { 0, 1, 0 }, { 1, 1, 1 } } } },
 												{'3', new LetterData('3') { CharGraphics = new int[,] { { 1, 1, 1 }, { 0, 1, 2 }, { 0, 0, 1 }, { 1, 1, 0 } } } },
 												{'4', new LetterData('4') { CharGraphics = new int[,] { { 1, 0, 1 }, { 1, 1, 1 }, { 0, 0, 1 }, { 0, 0, 1 } } } },
 												{'5', new LetterData('5') { CharGraphics = new int[,] { { 1, 1, 1 }, { 1, 1, 0 }, { 0, 0, 1 }, { 1, 1, 0 } } } },
@@ -279,6 +318,9 @@ namespace XCannon
 												{'=', new LetterData('=') { CharGraphics = new int[,] { { 0, 0, 0 }, { 1, 1, 1 }, { 0, 0, 0 }, { 1, 1, 1 } } } },
 												{'|', new LetterData('|') { CharGraphics = new int[,] { { 0, 1, 0 }, { 0, 1, 0 }, { 0, 1, 0 }, { 0, 1, 0 } } } },
 												{' ', new LetterData(' ') { CharGraphics = new int[,] { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 } } } },
+												{'<', new LetterData('<') { CharGraphics = new int[,] { { 0, 0, 0 }, { 0, 2, 1 }, { 1, 2, 0 }, { 0, 2, 1 } } } },
+												{'>', new LetterData('>') { CharGraphics = new int[,] { { 0, 0, 0 }, { 1, 2, 0 }, { 0, 2, 1 }, { 1, 2, 0 } } } },
+												{'_', new LetterData('_') { CharGraphics = new int[,] { { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 1, 1, 1 } } } },
 								};
 
 								private void PlaceLetter(char c, Point position, bool isLast = false)
@@ -462,86 +504,76 @@ namespace XCannon
 
 								private void textInput_TextChanged(object sender, EventArgs e)
 								{
+												int index = textInput.Text.IndexOf("\u007f");
+												if (index != -1)
+												{
+																int start = index-1;
+																for (int i = (index-1); i >= 0; i--)
+																{
+																				start = i;
+																				if (char.IsWhiteSpace(textInput.Text[i]))
+																								break;
+																}
+																textInput.Text = textInput.Text.Remove(start, index - start + 1);
+												}
 												ImageText = textInput.Text;
-												try
-												{
-																ReloadImage();
-												}
-												catch (Exception x)
-												{
-																Logging.Log(x);
-												}
+												if (!TryReload(3))
+																Close();
 								}
 
 								private void trackBar1_Scroll(object sender, EventArgs e)
 								{
-												try
-												{
-																byte[] argb = ARGB;
-																argb[1] = (byte)trackBar1.Value;
-																numericUpDown1.Value = argb[1];
-																ARGB = argb;
-																ReloadImage();
-												}
-												catch (Exception x)
-												{
-																Logging.Log(x);
-												}
+												byte[] argb = ARGB;
+												argb[1] = (byte)trackBar1.Value;
+												numericUpDown1.Value = argb[1];
+												ARGB = argb;
+												TryReload(2);
 								}
 
 								private void trackBar2_Scroll(object sender, EventArgs e)
 								{
-												try
-												{
-																byte[] argb = ARGB;
-																argb[2] = (byte)trackBar2.Value;
-																numericUpDown2.Value = argb[2];
-																ARGB = argb;
-																ReloadImage();
-												}
-												catch (Exception x)
-												{
-																Logging.Log(x);
-												}
+												byte[] argb = ARGB;
+												argb[2] = (byte)trackBar2.Value;
+												numericUpDown2.Value = argb[2];
+												ARGB = argb;
+												TryReload(2);
 								}
 
 								private void trackBar3_Scroll(object sender, EventArgs e)
 								{
-												try
-												{
-																byte[] argb = ARGB;
-																argb[3] = (byte)trackBar3.Value;
-																numericUpDown3.Value = argb[3];
-																ARGB = argb;
-																ReloadImage();
-												}
-												catch (Exception x)
-												{
-																Logging.Log(x);
-												}
+												byte[] argb = ARGB;
+												argb[3] = (byte)trackBar3.Value;
+												numericUpDown3.Value = argb[3];
+												ARGB = argb;
+												TryReload(2);
 								}
 
 								private void saveButton_Click(object sender, EventArgs e)
 								{
-												try
+												SaveFileDialog saveDialogue = new SaveFileDialog();
+												saveDialogue.Filter = "PNG Image|*png";
+												saveDialogue.Title = "Save Cannon";
+												saveDialogue.ShowDialog();
+												if (!string.IsNullOrEmpty(saveDialogue.FileName))
 												{
-																SaveFileDialog saveDialogue = new SaveFileDialog();
-																saveDialogue.Filter = "PNG Image|*png";
-																saveDialogue.Title = "Save Cannon";
-																saveDialogue.ShowDialog();
-																if (!string.IsNullOrEmpty(saveDialogue.FileName))
+																if (!saveDialogue.FileName.ToLower().EndsWith(".png"))
+																				saveDialogue.FileName += ".png";
+																byte[] b = File.ReadAllBytes(saveDialogue.FileName);
+																bool fail = false;
+																using (FileStream fStream = (FileStream)saveDialogue.OpenFile())
 																{
-																				if (!saveDialogue.FileName.ToLower().EndsWith(".png"))
-																								saveDialogue.FileName += ".png";
-																				using (FileStream fStream = (FileStream)saveDialogue.OpenFile())
+																				try
 																				{
 																								pictureBox1.Image.Save(fStream, System.Drawing.Imaging.ImageFormat.Png);
 																				}
+																				catch (Exception x)
+																				{
+																								Logging.Log(x);
+																								fail = true;
+																				}
 																}
-												}
-												catch (Exception x)
-												{
-																Logging.Log(x);
+																if(fail)
+																				File.WriteAllBytes(saveDialogue.FileName, b);
 												}
 								}
 
@@ -561,50 +593,29 @@ namespace XCannon
 
 								private void numericUpDown1_ValueChanged(object sender, EventArgs e)
 								{
-												try
-												{
-																byte[] argb = ARGB;
-																argb[1] = (byte)numericUpDown1.Value;
-																trackBar1.Value = argb[1];
-																ARGB = argb;
-																ReloadImage();
-												}
-												catch (Exception x)
-												{
-																Logging.Log(x);
-												}
+												byte[] argb = ARGB;
+												argb[1] = (byte)numericUpDown1.Value;
+												trackBar1.Value = argb[1];
+												ARGB = argb;
+												TryReload(2);
 								}
 
 								private void numericUpDown2_ValueChanged(object sender, EventArgs e)
 								{
-												try
-												{
-																byte[] argb = ARGB;
-																argb[2] = (byte)numericUpDown2.Value;
-																trackBar2.Value = argb[2];
-																ARGB = argb;
-																ReloadImage();
-												}
-												catch (Exception x)
-												{
-																Logging.Log(x);
-												}
+												byte[] argb = ARGB;
+												argb[2] = (byte)numericUpDown2.Value;
+												trackBar2.Value = argb[2];
+												ARGB = argb;
+												TryReload(2);
 								}
 
 								private void numericUpDown3_ValueChanged(object sender, EventArgs e)
 								{
-												try
-												{
-																byte[] argb = ARGB;
-																argb[3] = (byte)numericUpDown3.Value;
-																trackBar3.Value = argb[3];
-																ARGB = argb;
-																ReloadImage();
-												}
-												catch (Exception x)
-												{
-																Logging.Log(x);
-												}
+												byte[] argb = ARGB;
+												argb[3] = (byte)numericUpDown3.Value;
+												trackBar3.Value = argb[3];
+												ARGB = argb;
+												TryReload();
 								}
 				}
 				public struct LetterData
